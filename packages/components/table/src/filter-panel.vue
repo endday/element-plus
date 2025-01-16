@@ -1,37 +1,39 @@
 <template>
   <el-tooltip
     ref="tooltip"
-    v-model:visible="tooltipVisible"
+    :visible="tooltipVisible"
     :offset="0"
     :placement="placement"
     :show-arrow="false"
     :stop-popper-mouse-event="false"
-    append-to-body
+    teleported
     effect="light"
     pure
-    popper-class="el-table-filter"
+    :popper-class="filterClassName"
+    persistent
+    :append-to="appendTo"
   >
     <template #content>
       <div v-if="multiple">
-        <div class="el-table-filter__content">
-          <el-scrollbar wrap-class="el-table-filter__wrap">
+        <div :class="ns.e('content')">
+          <el-scrollbar :wrap-class="ns.e('wrap')">
             <el-checkbox-group
               v-model="filteredValue"
-              class="el-table-filter__checkbox-group"
+              :class="ns.e('checkbox-group')"
             >
               <el-checkbox
                 v-for="filter in filters"
                 :key="filter.value"
-                :label="filter.value"
+                :value="filter.value"
               >
                 {{ filter.text }}
               </el-checkbox>
             </el-checkbox-group>
           </el-scrollbar>
         </div>
-        <div class="el-table-filter__bottom">
+        <div :class="ns.e('bottom')">
           <button
-            :class="{ 'is-disabled': filteredValue.length === 0 }"
+            :class="{ [ns.is('disabled')]: filteredValue.length === 0 }"
             :disabled="filteredValue.length === 0"
             type="button"
             @click="handleConfirm"
@@ -43,12 +45,14 @@
           </button>
         </div>
       </div>
-      <ul v-else class="el-table-filter__list">
+      <ul v-else :class="ns.e('list')">
         <li
-          :class="{
-            'is-active': filterValue === undefined || filterValue === null,
-          }"
-          class="el-table-filter__list-item"
+          :class="[
+            ns.e('list-item'),
+            {
+              [ns.is('active')]: isPropAbsent(filterValue),
+            },
+          ]"
           @click="handleSelect(null)"
         >
           {{ t('el.table.clearFilter') }}
@@ -56,9 +60,8 @@
         <li
           v-for="filter in filters"
           :key="filter.value"
-          :class="{ 'is-active': isActive(filter) }"
+          :class="[ns.e('list-item'), ns.is('active', isActive(filter))]"
           :label="filter.value"
-          class="el-table-filter__list-item"
           @click="handleSelect(filter.value)"
         >
           {{ filter.text }}
@@ -68,12 +71,17 @@
     <template #default>
       <span
         v-click-outside:[popperPaneRef]="hideFilterPanel"
-        class="el-table__column-filter-trigger el-none-outline"
+        :class="[
+          `${ns.namespace.value}-table__column-filter-trigger`,
+          `${ns.namespace.value}-none-outline`,
+        ]"
         @click="showFilterPanel"
       >
         <el-icon>
-          <arrow-up v-if="column.filterOpened" />
-          <arrow-down v-else />
+          <slot name="filter-icon">
+            <arrow-up v-if="column.filterOpened" />
+            <arrow-down v-else />
+          </slot>
         </el-icon>
       </span>
     </template>
@@ -81,17 +89,19 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, getCurrentInstance, watch } from 'vue'
+// @ts-nocheck
+import { computed, defineComponent, getCurrentInstance, ref, watch } from 'vue'
 import ElCheckbox from '@element-plus/components/checkbox'
 import { ElIcon } from '@element-plus/components/icon'
 import { ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import { ClickOutside } from '@element-plus/directives'
-import { useLocale } from '@element-plus/hooks'
+import { useLocale, useNamespace } from '@element-plus/hooks'
 import ElTooltip from '@element-plus/components/tooltip'
 import ElScrollbar from '@element-plus/components/scrollbar'
-import type { Placement } from '@element-plus/components/popper'
+import { isPropAbsent } from '@element-plus/utils'
 
-import type { WritableComputedRef, PropType } from 'vue'
+import type { Placement } from '@element-plus/components/popper'
+import type { PropType, WritableComputedRef } from 'vue'
 import type { TableColumnCtx } from './table-column/defaults'
 import type { TableHeader } from './table-header'
 import type { Store } from './store'
@@ -124,11 +134,15 @@ export default defineComponent({
     upDataColumn: {
       type: Function,
     },
+    appendTo: {
+      type: String,
+    },
   },
   setup(props) {
     const instance = getCurrentInstance()
     const { t } = useLocale()
-    const parent = instance.parent as TableHeader
+    const ns = useNamespace('table-filter')
+    const parent = instance?.parent as TableHeader
     if (!parent.filterPanels.value[props.column.id]) {
       parent.filterPanels.value[props.column.id] = instance
     }
@@ -137,11 +151,17 @@ export default defineComponent({
     const filters = computed(() => {
       return props.column && props.column.filters
     })
+    const filterClassName = computed(() => {
+      if (props.column.filterClassName) {
+        return `${ns.b()} ${props.column.filterClassName}`
+      }
+      return ns.b()
+    })
     const filterValue = computed({
-      get: () => (props.column.filteredValue || [])[0],
+      get: () => (props.column?.filteredValue || [])[0],
       set: (value: string) => {
         if (filteredValue.value) {
-          if (typeof value !== 'undefined' && value !== null) {
+          if (!isPropAbsent(value)) {
             filteredValue.value.splice(0, 1, value)
           } else {
             filteredValue.value.splice(0, 1)
@@ -192,7 +212,7 @@ export default defineComponent({
     }
     const handleSelect = (_filterValue?: string) => {
       filterValue.value = _filterValue
-      if (typeof _filterValue !== 'undefined' && _filterValue !== null) {
+      if (!isPropAbsent(_filterValue)) {
         confirmFilter(filteredValue.value)
       } else {
         confirmFilter([])
@@ -226,14 +246,17 @@ export default defineComponent({
     return {
       tooltipVisible,
       multiple,
+      filterClassName,
       filteredValue,
       filterValue,
       filters,
       handleConfirm,
       handleReset,
       handleSelect,
+      isPropAbsent,
       isActive,
       t,
+      ns,
       showFilterPanel,
       hideFilterPanel,
       popperPaneRef,

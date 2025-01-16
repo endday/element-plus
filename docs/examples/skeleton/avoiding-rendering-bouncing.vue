@@ -11,7 +11,7 @@
       :throttle="500"
     >
       <template #template>
-        <el-skeleton-item variant="image" style="width: 240px; height: 240px" />
+        <el-skeleton-item variant="image" style="width: 240px; height: 265px" />
         <div style="padding: 14px">
           <el-skeleton-item variant="h3" style="width: 50%" />
           <div
@@ -37,8 +37,8 @@
           <div style="padding: 14px">
             <span>Delicious hamburger</span>
             <div class="bottom card-header">
-              <span class="time">{{ currentDate }}</span>
-              <el-button type="text" class="button">operation button</el-button>
+              <div class="time">{{ currentDate }}</div>
+              <el-button text class="button">operation button</el-button>
             </div>
           </div>
         </el-card>
@@ -49,8 +49,7 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import dayjs from 'dayjs'
 
 const loading = ref(false)
-const currentDate = dayjs().format('YYYY-MM-DD')
+const currentDate = new Date().toDateString()
 </script>
