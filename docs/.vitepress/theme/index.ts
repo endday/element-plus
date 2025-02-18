@@ -1,17 +1,14 @@
-import ElementPlus from 'element-plus'
+import ElementPlus, {
+  ID_INJECTION_KEY,
+  ZINDEX_INJECTION_KEY,
+} from 'element-plus'
 
-// windicss layers
-import 'virtual:windi-base.css'
-import 'virtual:windi-components.css'
-
-import VPApp, { globals, NotFound } from '../vitepress'
+import VPApp, { NotFound, globals } from '../vitepress'
 import { define } from '../utils/types'
-
-// windicss utilities should be the last style import
-import 'virtual:windi-utilities.css'
-// windicss devtools support (dev only)
-import 'virtual:windi-devtools'
-
+import 'uno.css'
+import './style.css'
+import 'vitepress/dist/client/theme-default/styles/components/vp-code-group.css'
+import 'virtual:group-icons.css'
 import type { Theme } from 'vitepress'
 
 export default define<Theme>({
@@ -19,6 +16,8 @@ export default define<Theme>({
   Layout: VPApp,
   enhanceApp: ({ app }) => {
     app.use(ElementPlus)
+    app.provide(ID_INJECTION_KEY, { prefix: 1024, current: 0 })
+    app.provide(ZINDEX_INJECTION_KEY, { current: 0 })
 
     globals.forEach(([name, Comp]) => {
       app.component(name, Comp)

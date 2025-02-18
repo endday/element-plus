@@ -1,7 +1,8 @@
-import { withInstall } from '@element-plus/utils/with-install'
+import { withInstall } from '@element-plus/utils'
 import Teleport from './src/teleport.vue'
+import type { SFCWithInstall } from '@element-plus/utils'
 
-export const ElTeleport = withInstall(Teleport)
+export const ElTeleport: SFCWithInstall<typeof Teleport> = withInstall(Teleport)
 
 export default ElTeleport
 

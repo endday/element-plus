@@ -1,21 +1,20 @@
 <template>
   <div class="custom-tree-node-container">
-    <div class="block">
-      <el-tree
-        :data="data"
-        show-checkbox
-        node-key="id"
-        default-expand-all
-        :expand-on-click-node="false"
-        :props="{ class: customNodeClass }"
-      />
-    </div>
+    <el-tree
+      style="max-width: 600px"
+      :data="data"
+      show-checkbox
+      node-key="id"
+      default-expand-all
+      :expand-on-click-node="false"
+      :props="{ class: customNodeClass }"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
 import type Node from 'element-plus/es/components/tree/src/model/node'
-
+import type { TreeNodeData } from 'element-plus/es/components/tree/src/tree.type'
 interface Tree {
   id: number
   label: string
@@ -23,12 +22,8 @@ interface Tree {
   children?: Tree[]
 }
 
-const customNodeClass = (data: Tree, node: Node) => {
-  if (data.isPenultimate) {
-    return 'is-penultimate'
-  }
-  return null
-}
+const customNodeClass = ({ isPenultimate }: TreeNodeData, node: Node) =>
+  isPenultimate ? 'is-penultimate' : ''
 
 const data: Tree[] = [
   {
@@ -87,10 +82,10 @@ const data: Tree[] = [
 
 <style>
 .is-penultimate > .el-tree-node__content {
-  color: red;
+  color: #626aef;
 }
 
-.el-tree-node.is-expanded.is-penultimate > .el-tree-node__children {
+.el-tree .el-tree-node.is-penultimate > .el-tree-node__children {
   display: flex;
   flex-direction: row;
 }
